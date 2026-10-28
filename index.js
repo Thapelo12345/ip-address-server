@@ -1,4 +1,5 @@
-import cors from "cors";
+// import cors from "cors";
+const cors = require("cors")
 const express = require("express");
 const app = express();
 require("dotenv").config();
@@ -6,8 +7,26 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/api/location', (req, res) => {
+  // 1. Safely extract the client's real IP address
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  
+  // 2. Extract Vercel's automatic geolocation data
+  const location = {
+    ip: typeof ip === 'string' ? ip.split(',')[0].trim() : ip,
+    country: req.headers['x-vercel-ip-country'] || 'Unknown',
+    region: req.headers['x-vercel-ip-country-region'] || 'Unknown',
+    city: req.headers['x-vercel-ip-city'] || 'Unknown',
+    latitude: req.headers['x-vercel-ip-latitude'] || 'Unknown',
+    longitude: req.headers['x-vercel-ip-longitude'] || 'Unknown',
+  };
+
+  res.json(location);
+});
 
 app.get("/geo-data:IP", async (req, res) => {
 const IPAddress = req.params.IP; 
